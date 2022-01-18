@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApiNet5Example.Configuration;
+using WebApiNet5Example.Services;
 
 namespace WebApiNet5Example
 {
@@ -32,6 +33,10 @@ namespace WebApiNet5Example
 
             services.AddSingleton<IApiConfig>
                 (x => x.GetRequiredService<IOptions<ApiConfig>>().Value);
+
+            //Registro de Clients
+            services.AddHttpClient<ITodoService, TodoService>(
+                x => x.BaseAddress = new Uri(Configuration["ApiConfig:BaseUrl"]));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
