@@ -13,6 +13,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using WebApiNet5Example.Configuration;
 using WebApiNet5Example.Services;
+using Polly;
+using Polly.Extensions.Http;
 
 namespace WebApiNet5Example
 {
@@ -34,9 +36,14 @@ namespace WebApiNet5Example
             services.AddSingleton<IApiConfig>
                 (x => x.GetRequiredService<IOptions<ApiConfig>>().Value);
 
+            //Politica de Retry com Polly (3x com timeout de 3 segundos)
+            var retryPolicy = HttpPolicyExtensions.HandleTransientHttpError()
+                    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(retryAttempt));
+
             //Registro de Clients
             services.AddHttpClient<ITodoService, TodoService>(
-                x => x.BaseAddress = new Uri(Configuration["ApiConfig:BaseUrl"]));
+                x => x.BaseAddress = new Uri(Configuration["ApiConfig:BaseUrl"]))
+                .AddPolicyHandler(retryPolicy); //Aplicando a politica no projeto
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
